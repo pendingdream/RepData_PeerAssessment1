@@ -17,96 +17,189 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 ## 1.Loading and preprocessing the data
 Download the data and put the file in working directory.  
 Use `read.csv()` to load the data into a data frame object, d.
-```{r readdata}
-d<-read.csv("./activity.csv",colClass=c("numeric","character","numeric"))
+
+```r
+d <- read.csv("./activity.csv", colClass = c("numeric", "character", "numeric"))
 str(d)
 ```
 
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : chr  "2012-10-01" "2012-10-01" "2012-10-01" "2012-10-01" ...
+##  $ interval: num  0 5 10 15 20 25 30 35 40 45 ...
+```
+
+
 Variable `date` is read as character. We transform it into `date` class.
-```{r processdate}
-d$date<-as.Date(d$date)
+
+```r
+d$date <- as.Date(d$date)
 str(d)
 ```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: num  0 5 10 15 20 25 30 35 40 45 ...
+```
+
 
 ## What is mean total number of steps taken per day?
 To answer the question, first we need to sum the steps by date. Here we ignore the NA value.
-```{r q1_1}
-res1<-aggregate(d$steps,by=list(d$date),sum,simplify=TRUE,na.rm=TRUE)
-names(res1)<-c("date","sum.steps")
-```
-Then plot the histogram of the sum of steps.
-We need to load `ggplot2` library to use `qplot()`
-```{r q1_2}
-library(ggplot2)
-qplot(sum.steps,data=res1,geom="histogram",xlab="Sum of Steps",binwidth=800)
+
+```r
+res1 <- aggregate(d$steps, by = list(d$date), sum, simplify = TRUE, na.rm = TRUE)
+names(res1) <- c("date", "sum.steps")
 ```
 
+Then plot the histogram of the sum of steps.
+We need to load `ggplot2` library to use `qplot()`
+
+```r
+library(ggplot2)
+qplot(sum.steps, data = res1, geom = "histogram", xlab = "Sum of Steps", binwidth = 800)
+```
+
+![plot of chunk q1_2](figure/q1_2.png) 
+
+
 Mean and median of total number of steps
-```{r q1_3}
+
+```r
 mean(res1$sum.steps)
+```
+
+```
+## [1] 9354
+```
+
+```r
 median(res1$sum.steps)
 ```
 
-## What is the average daily activity pattern?
-To answer the question, first we need to get the average daily steps for each interval. Here we ignore the NA value.
-```{r q2_1}
-res2<-aggregate(d$steps,by=list(d$interval),mean,simplify=TRUE,na.rm=TRUE)
-names(res2)<-c("interval","ave.steps")
 ```
-Then plot the time series.
-```{r q2_2}
-qplot(interval,ave.steps,data=res2,geom="line",ylab="Average Steps")
+## [1] 10395
 ```
 
-Find out the interval with maximum average steps across all the days
-```{r q2_3}
-res2[with(res2,order(-ave.steps)),][1,1]
+
+## What is the average daily activity pattern?
+To answer the question, first we need to get the average daily steps for each interval. Here we ignore the NA value.
+
+```r
+res2 <- aggregate(d$steps, by = list(d$interval), mean, simplify = TRUE, na.rm = TRUE)
+names(res2) <- c("interval", "ave.steps")
 ```
+
+Then plot the time series.
+
+```r
+qplot(interval, ave.steps, data = res2, geom = "line", ylab = "Average Steps")
+```
+
+![plot of chunk q2_2](figure/q2_2.png) 
+
+
+Find out the interval with maximum average steps across all the days
+
+```r
+res2[with(res2, order(-ave.steps)), ][1, 1]
+```
+
+```
+## [1] 835
+```
+
 
 ## Imputing missing values
 How many rows in the original data set containing missing value?
-```{r q3_1}
-nrow(d[is.na(d),])
+
+```r
+nrow(d[is.na(d), ])
 ```
+
+```
+## [1] 2304
+```
+
 
 Missing values may impose bias on the analysis result, hence we try to use the average steps in that interval across all days to fill in the missing values.  
 The average is already calculated in previous section.
-```{r q3_2}
-d2<-d
-for (i in 1:dim(d2)[1]){
-     if(is.na(d2[i,1])) {
-             d2[i,1]=res2[res2$interval==d2[i,3],2]}
+
+```r
+d2 <- d
+for (i in 1:dim(d2)[1]) {
+    if (is.na(d2[i, 1])) {
+        d2[i, 1] = res2[res2$interval == d2[i, 3], 2]
     }
+}
 str(d2)
 ```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : num  1.717 0.3396 0.1321 0.1509 0.0755 ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: num  0 5 10 15 20 25 30 35 40 45 ...
+```
+
 Repeat the steps in first section to get the mean total.
 
-```{r q3_3}
-res3<-aggregate(d2$steps,by=list(d2$date),sum,simplify=TRUE)
-names(res3)<-c("date","sum.steps")
-qplot(sum.steps,data=res3,geom="histogram",xlab="Sum of Steps",binwidth=800)
+
+```r
+res3 <- aggregate(d2$steps, by = list(d2$date), sum, simplify = TRUE)
+names(res3) <- c("date", "sum.steps")
+qplot(sum.steps, data = res3, geom = "histogram", xlab = "Sum of Steps", binwidth = 800)
 ```
+
+![plot of chunk q3_3](figure/q3_3.png) 
+
 Mean and median of total number of steps
-```{r q3_3_2}
+
+```r
 mean(res3$sum.steps)
+```
+
+```
+## [1] 10766
+```
+
+```r
 median(res3$sum.steps)
 ```
+
+```
+## [1] 10766
+```
+
 
 After the process, we can see that the graph is more concentrated in the middle and mean,median value are higher.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 First we need another column indicating whether the day is weekday or weekend
-```{r q4}
-Sys.setlocale(category = "LC_TIME",locale="English")
-d2$wd<-weekdays(d2$date)
-l<- d2$wd == "Sunday" |d2$wd  == "Saturday"
-d2$wd[l]<-"weekend"
-d2$wd[!l]<-"weekday"
-d2$wd<-factor(d2$wd)
 
-res4<-aggregate(d2$steps,by=list(d2$interval,d2$wd),mean,simplify=TRUE)
-names(res4)<-c("interval","wd","ave.steps")
-qplot(interval,ave.steps,data=res4,facets=wd~.,geom="line")
+```r
+Sys.setlocale(category = "LC_TIME", locale = "English")
 ```
+
+```
+## [1] "English_United States.1252"
+```
+
+```r
+d2$wd <- weekdays(d2$date)
+l <- d2$wd == "Sunday" | d2$wd == "Saturday"
+d2$wd[l] <- "weekend"
+d2$wd[!l] <- "weekday"
+d2$wd <- factor(d2$wd)
+
+res4 <- aggregate(d2$steps, by = list(d2$interval, d2$wd), mean, simplify = TRUE)
+names(res4) <- c("interval", "wd", "ave.steps")
+qplot(interval, ave.steps, data = res4, facets = wd ~ ., geom = "line")
+```
+
+![plot of chunk q4](figure/q4.png) 
+
 
 It shows that the average steps taken in weekend is higher than in weekdays.
